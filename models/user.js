@@ -18,6 +18,18 @@ const userSchema = mongoose.Schema({
     type: String,
     enum: ["USER", "ADMIN"],
   },
+  refresh_token: {
+    type: String,
+  },
+  refresh_token_expiry: {
+    type: Date,
+  },
+  forgotPasswordToken: {
+    type: String,
+  },
+  forgotPasswordExpiry: {
+    type: Date,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

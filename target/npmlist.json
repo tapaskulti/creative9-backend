@@ -1,0 +1,1 @@
+{"version":"1.0.0","name":"creativevally-backend","dependencies":{"bcrypt":{"version":"5.1.0"},"cloudinary":{"version":"1.36.4"},"cors":{"version":"2.8.5"},"dotenv":{"version":"16.0.3"},"express":{"version":"4.18.2"},"jsonwebtoken":{"version":"9.0.0"},"mongoose":{"version":"7.1.0"},"morgan":{"version":"1.10.0"}}}

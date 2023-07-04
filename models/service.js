@@ -7,37 +7,32 @@ const serviceSchema = new mongoose.Schema({
   about: {
     type: String,
   },
-  picture: [
-    {
-      id: {
-        type: String,
-      },
-      secure_url: {
-        type: String,
-      },
-    },
-  ],
+  picture: Object,
   basicPrice: {
-    type: Number,
+    type: String,
   },
   basicPriceCurrency: {
     type: String,
   },
-  basicDetails: Array,
+  basicDetails: String,
   standardPrice: {
-    type: Number,
+    type: String,
   },
   standardPriceCurrency: {
     type: String,
   },
-  standardDetails: Array,
+  standardDetails: String,
   premiumPrice: {
-    type: Number,
+    type: String,
   },
   premiumPriceCurrency: {
     type: String,
   },
-  premiumDetails: Array,
+  premiumDetails: String,
+  categoryDetail: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "category",
+  },
 });
 
 module.exports = mongoose.model("service", serviceSchema);

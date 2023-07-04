@@ -1,7 +1,7 @@
+const Service = require("../models/service");
 const cloudinary = require("cloudinary");
-const Art = require("../models/art");
 
-exports.createArt = async (req, res) => {
+exports.createService = async (req, res) => {
   try {
     let index = 0;
     const imagesList = {};
@@ -21,7 +21,7 @@ exports.createArt = async (req, res) => {
         const result = await cloudinary.v2.uploader.upload(
           files[file]?.tempFilePath,
           {
-            folder: "artcreativevally",
+            folder: "servicecreativevally",
             crop: "scale",
           }
         );
@@ -43,9 +43,9 @@ exports.createArt = async (req, res) => {
       return res.status(400).json({ message: "Art should have title" });
     }
 
-    req.body.art = imagesList;
-
-    const newArt = await Art.create(req.body);
+    req.body.picture = imagesList;
+    req.body.categoryDetail = req.query.categoryId;
+    const newArt = await Service.create(req.body);
 
     res.status(200).send(newArt);
   } catch (err) {
@@ -53,30 +53,24 @@ exports.createArt = async (req, res) => {
   }
 };
 
-exports.getAllArt = async (req, res) => {
+exports.getAllServices = async (req, res) => {
   try {
-    const getAllArt = await Art.find();
+    const services = await Service.find({
+      categoryDetail: req.query.categoryId,
+    }).populate("categoryDetail");
 
-    res.status(200).send(getAllArt);
+    res.status(200).send(services);
   } catch (error) {
     res.status(500).send(err);
   }
 };
 
-exports.getArtById = async (req, res) => {
+exports.getServiceById = async (req, res) => {
   try {
-    const getArtById = await Art.findById(req.query.id);
+    const service = await Service.findById(req.query.id);
 
-    if (!getArtById) {
-      return res.status(400).json({ message: "No Such Art found" });
-    }
-
-    res.status(200).send(getArtById);
+    res.status(200).send(service);
   } catch (error) {
     res.status(500).send(err);
   }
 };
-
-// todo: update art
-
-// todo: delete art
