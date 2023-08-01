@@ -5,6 +5,11 @@ const morgan = require("morgan");
 const connectWithDb = require("./db/db");
 const fileUpload = require("express-fileupload");
 const cloudinary = require("cloudinary");
+const cookieParser = require("cookie-parser");
+const User = require("./models/user");
+
+const http = require("http");
+const { Server } = require("socket.io");
 
 connectWithDb();
 cloudinary.config({
@@ -25,7 +30,49 @@ app.use(
   })
 );
 
+app.use(cookieParser(process.env.REFRESH_TOKEN_SECRET));
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    credentials: true,
+    methods: ["GET", "POST"],
+  },
+
+  allowUpgrades: true,
+});
+
+app.use((req, res, next) => {
+  res.io = io;
+  next();
+});
+
+io.on("connection", (socket) => {
+  console.log(`User connected ${socket.id}`);
+  socket.on("connection", () => {
+    console.log("connected");
+  });
+
+  socket.on("join", (data) => {
+    console.log(data, "data");
+    socket.join(data);
+  });
+
+  socket.on("SEND_MESSAGE", (data) => {
+    console.log(data, "data");
+    socket.emit("RECEIVE_MESSAGE", data);
+  });
+
+  // We can write our socket event listeners in here...
+  socket.on("disconnect", () => {
+    console.log(`User disconnected ${socket.id}`);
+  });
+});
+
 const allowedDomains = ["http://localhost:5173"];
+
 app.use(
   cors({
     // origin: "http://24.199.70.115",
@@ -58,9 +105,10 @@ app.use(apiVersion + "/user", require("./routes/user"));
 app.use(apiVersion + "/art", require("./routes/art"));
 app.use(apiVersion + "/category", require("./routes/category"));
 app.use(apiVersion + "/service", require("./routes/service"));
+app.use(apiVersion + "/chat", require("./routes/chat"));
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`server running on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
