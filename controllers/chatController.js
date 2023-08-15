@@ -1,37 +1,14 @@
 const Chat = require("../models/chat");
-const ObjectID = require("mongodb").ObjectId;
-
-exports.createChat = async (req, res) => {
-  try {
-    const { sender, receiver, message } = req.body;
-    const chat = new Chat({
-      sender,
-      receiver,
-      message,
-    });
-    await chat.save();
-    res.io.emit("RECEIVE_MESSAGE", chat);
-
-    res.status(200).json({
-      message: "Chat created successfully",
-      chat,
-    });
-  } catch (error) {}
-};
+const { ObjectId } = require("mongodb");
 
 exports.getChats = async (req, res) => {
   try {
+    const { sender, receiver } = req.params;
     console.log(req.params, "params");
     const chats = await Chat.find({
       $or: [
-        {
-          sender: new ObjectID(req.params.sender),
-          receiver: new ObjectID(req.params.receiver),
-        },
-        // {
-        //   sender: req.params.receiver.toString(),
-        //   receiver: req.params.sender.toString(),
-        // },
+        { sender: new ObjectId(sender), receiver: new ObjectId(receiver) },
+        { sender: new ObjectId(receiver), receiver: new ObjectId(sender) },
       ],
     });
 

@@ -7,6 +7,7 @@ const fileUpload = require("express-fileupload");
 const cloudinary = require("cloudinary");
 const cookieParser = require("cookie-parser");
 const User = require("./models/user");
+const Chat = require("./models/chat");
 
 const http = require("http");
 const { Server } = require("socket.io");
@@ -49,25 +50,54 @@ app.use((req, res, next) => {
   next();
 });
 
-io.on("connection", (socket) => {
-  console.log(`User connected ${socket.id}`);
-  socket.on("connection", () => {
-    console.log("connected");
+io.on("connection", async (socket) => {
+  console.log("User connected");
+
+  socket.on("user-connected", (userId) => {
+    //   Store the MongoDB user ID in the socketId field
+    console.log(userId, "id--->");
+    User.findByIdAndUpdate(userId, { socketId: socket.id }, { new: true })
+      .then((user) => {
+        console.log("User connected:", user.username);
+      })
+      .catch((error) => {
+        console.error("Error updating socket ID:", error);
+      });
   });
 
-  socket.on("join", (data) => {
-    console.log(data, "data");
-    socket.join(data);
+  socket.on("send-message", async (messages) => {
+    console.log(messages, "mm");
+    try {
+      const { sender, receiver, message } = messages;
+      const chat = new Chat({
+        sender,
+        receiver,
+        message,
+      });
+      await chat.save();
+
+      //   emit message to sender
+      io.to(socket?.id).emit("receive-message", messages);
+
+      // Emit the message to the receiver
+      const receiverUser = await User.findById(receiver);
+      if (receiverUser?.socketId) {
+        io.to(receiverUser.socketId).emit("receive-message", messages);
+      }
+    } catch (error) {
+      console.log(error?.message);
+    }
   });
 
-  socket.on("SEND_MESSAGE", (data) => {
-    console.log(data, "data");
-    socket.emit("RECEIVE_MESSAGE", data);
-  });
-
-  // We can write our socket event listeners in here...
   socket.on("disconnect", () => {
-    console.log(`User disconnected ${socket.id}`);
+    console.log("User disconnected");
+    User.findOneAndUpdate({ socketId: socket.id }, { socketId: null })
+      .then((user) => {
+        console.log("User disconnected");
+      })
+      .catch((error) => {
+        console.error("Error updating socket ID:", error);
+      });
   });
 });
 

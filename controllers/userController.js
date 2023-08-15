@@ -73,6 +73,7 @@ exports.activateEmail = async (req, res) => {
       process.env.ACTIVATION_TOKEN_SECRET
     );
 
+    console.log(user, "user");
     const { name, email, password } = user;
 
     const check = await User.findOne({ email });
@@ -325,6 +326,15 @@ exports.resetPassword = async (req, res) => {
   } catch (error) {
     return res.status(500).send({ success: false, message: error.message });
   }
+};
+
+exports.getAllUsers = async (req, res) => {
+  const users = await User.find().select(
+    "-password -refresh_token -refresh_token_expiry -forgotPasswordToken -forgotPasswordExpiry"
+  );
+
+  console.log(users, "users list");
+  res.send(users);
 };
 
 // utilities

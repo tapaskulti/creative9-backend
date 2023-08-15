@@ -11,6 +11,7 @@ const chatSchema = new Schema({
   },
   message: {
     type: String,
+    required: true,
   },
   createdAt: {
     type: Date,

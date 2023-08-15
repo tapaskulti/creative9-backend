@@ -8,6 +8,7 @@ const {
   checkToken,
   resetPassword,
   getUserDetails,
+  getAllUsers,
 } = require("../controllers/userController");
 
 const router = require("express").Router();
@@ -17,6 +18,7 @@ router.route("/activation").post(activateEmail);
 router.route("/login").post(login);
 router.route("/accessToken").get(getAccessToken);
 router.route("/userDetails").get(getUserDetails);
+router.route("/userList").get(getAllUsers);
 router.route("/logout").get(logout);
 
 router.route("/forgotPassword").post(forgotPasswordmail);
