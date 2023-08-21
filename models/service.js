@@ -14,21 +14,21 @@ const serviceSchema = new mongoose.Schema({
   basicPriceCurrency: {
     type: String,
   },
-  basicDetails: String,
+  basicDetails: Object,
   standardPrice: {
     type: String,
   },
   standardPriceCurrency: {
     type: String,
   },
-  standardDetails: String,
+  standardDetails: Object,
   premiumPrice: {
     type: String,
   },
   premiumPriceCurrency: {
     type: String,
   },
-  premiumDetails: String,
+  premiumDetails: Object,
   categoryDetail: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "category",

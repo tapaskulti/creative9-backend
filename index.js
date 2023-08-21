@@ -37,7 +37,8 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "http://localhost:5173", // ububtu local
+    // origin: "http://localhost:5175", // mac local
     credentials: true,
     methods: ["GET", "POST"],
   },
@@ -101,7 +102,7 @@ io.on("connection", async (socket) => {
   });
 });
 
-const allowedDomains = ["http://localhost:5173"];
+const allowedDomains = ["http://localhost:5173", "http://localhost:5175"];
 
 app.use(
   cors({
@@ -137,7 +138,7 @@ app.use(apiVersion + "/category", require("./routes/category"));
 app.use(apiVersion + "/service", require("./routes/service"));
 app.use(apiVersion + "/chat", require("./routes/chat"));
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

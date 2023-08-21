@@ -52,3 +52,33 @@ exports.getCategoryById = async (req, res) => {
     res.status(500).send(error);
   }
 };
+
+exports.updateCategory = async (req, res) => {
+  try {
+    const category = await Category.findByIdAndUpdate(req.query.id, req.body, {
+      new: true,
+    });
+
+    if (!category) {
+      res.status(200).send("no such category found");
+    }
+
+    res.status(200).send(category);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
+exports.deleteCategory = async (req, res) => {
+  try {
+    const deleteCategoryItem = await Category.findByIdAndDelete(req.query.id);
+
+    if (!deleteCategoryItem) {
+      res.status(200).send("no such category found");
+    }
+
+    res.status(200).send(deleteCategoryItem);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
