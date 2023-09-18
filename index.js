@@ -69,21 +69,50 @@ io.on("connection", async (socket) => {
   socket.on("send-message", async (messages) => {
     console.log(messages, "mm");
     try {
-      const { sender, receiver, message } = messages;
+      const { sender, receiver, message, offer } = messages.msg;
+      const payload = {};
+      let processedImages = [];
+      if (messages?.msg?.images?.length > 0) {
+        for (const image of messages?.msg?.images) {
+          const result = await cloudinary.v2.uploader.upload(image, {
+            folder: "chat",
+            crop: "scale",
+          });
+          processedImages.push({
+            public_id: result?.public_id,
+            secure_url: result?.secure_url,
+          });
+        }
+      }
+      processedImages.map((image) => {
+        console.log(image, "uploaded image");
+      });
+
       const chat = new Chat({
         sender,
         receiver,
         message,
+        offer,
+        images: processedImages,
       });
+
       await chat.save();
 
+      let messagePaylod = {
+        sender,
+        receiver,
+        message,
+        offer,
+        images: processedImages,
+      };
+
       //   emit message to sender
-      io.to(socket?.id).emit("receive-message", messages);
+      io.to(socket?.id).emit("receive-message", messagePaylod);
 
       // Emit the message to the receiver
       const receiverUser = await User.findById(receiver);
       if (receiverUser?.socketId) {
-        io.to(receiverUser.socketId).emit("receive-message", messages);
+        io.to(receiverUser.socketId).emit("receive-message", messagePaylod);
       }
     } catch (error) {
       console.log(error?.message);
@@ -137,6 +166,7 @@ app.use(apiVersion + "/art", require("./routes/art"));
 app.use(apiVersion + "/category", require("./routes/category"));
 app.use(apiVersion + "/service", require("./routes/service"));
 app.use(apiVersion + "/chat", require("./routes/chat"));
+app.use(apiVersion + "/order", require("./routes/order"));
 
 const PORT = process.env.PORT || 5001;
 

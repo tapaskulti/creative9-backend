@@ -65,6 +65,16 @@ exports.getAllServices = async (req, res) => {
   }
 };
 
+exports.getAllServicesForOffer = async (req, res) => {
+  try {
+    const allServices = await Service.find().populate("categoryDetail");
+
+    res.status(200).send(allServices);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
 exports.getServiceById = async (req, res) => {
   try {
     const service = await Service.findById(req.query.id);

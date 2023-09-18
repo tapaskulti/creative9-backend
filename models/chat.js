@@ -11,8 +11,18 @@ const chatSchema = new Schema({
   },
   message: {
     type: String,
-    required: true,
   },
+  images: [
+    {
+      public_id: {
+        type: String,
+      },
+      secure_url: {
+        type: String,
+      },
+    },
+  ],
+  offer: Object,
   createdAt: {
     type: Date,
     default: Date.now,
