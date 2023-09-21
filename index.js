@@ -37,7 +37,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "https://sea-turtle-app-jr3nk.ondigitalocean.app",
     credentials: true,
     methods: ["GET", "POST"],
   },
@@ -101,7 +101,11 @@ io.on("connection", async (socket) => {
   });
 });
 
-const allowedDomains = ["http://localhost:5173"];
+const allowedDomains = [
+  "http://localhost:5173",
+  "https://sea-turtle-app-jr3nk.ondigitalocean.app",
+  "http://www.creativevalley9.com",
+];
 
 app.use(
   cors({
