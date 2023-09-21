@@ -37,7 +37,7 @@ exports.createService = async (req, res) => {
       }
     }
 
-    console.log(req.body, "req.body");
+    console.log(JSON.parse(req.body.basicDetails), "req.body BASIC");
 
     if (req.body.title === "") {
       return res.status(400).json({ message: "Art should have title" });
@@ -65,6 +65,16 @@ exports.getAllServices = async (req, res) => {
   }
 };
 
+exports.getAllServicesForOffer = async (req, res) => {
+  try {
+    const allServices = await Service.find().populate("categoryDetail");
+
+    res.status(200).send(allServices);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
 exports.getServiceById = async (req, res) => {
   try {
     const service = await Service.findById(req.query.id);
@@ -74,3 +84,5 @@ exports.getServiceById = async (req, res) => {
     res.status(500).send(err);
   }
 };
+
+exports.updateService = async (req, res) => {};

@@ -31,35 +31,47 @@ exports.signup = async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    const newUser = {
-      name,
-      email,
-      password: passwordHash,
-    };
+    // const newUser = {
+    //   name,
+    //   email,
+    //   password: passwordHash,
+    // };
 
     // cookieToken(user, req, res);
 
-    const activation_token = createActivationToken(newUser);
+    // const activation_token = createActivationToken(newUser);
+
+    // encript activation token
+    
 
     // const url = `${CLIENT_URL}/user/activate/${activation_token}`;
-    const url = `http://localhost:3000/user/activate/${activation_token}`;
+    // const url = `http://localhost:5173/user/activate/${activation_token}`;
 
-    const signupUserMailTemplate = fs.readFileSync(
-      path.join(__dirname, "../template/signUp.hbs"),
-      "utf8"
-    );
+    // const signupUserMailTemplate = fs.readFileSync(
+    //   path.join(__dirname, "../template/signUp.hbs"),
+    //   "utf8"
+    // );
 
-    const template = handlebars.compile(signupUserMailTemplate);
+    // const template = handlebars.compile(signupUserMailTemplate);
 
-    const messageBody = template({
-      url,
+    // const messageBody = template({
+    //   url,
+    // });
+
+    // sendEmail(email, messageBody, "Verify your email address");
+
+    // res.json({
+    //   msg: "Please check your mail activate your email to start.",
+    // });
+    const newUser = new User({
+      name,
+      email,
+      password: passwordHash,
     });
 
-    sendEmail(email, messageBody, "Verify your email address");
+    await newUser.save();
 
-    res.json({
-      msg: "Please check your mail activate your email to start.",
-    });
+    res.status(200).json({ msg: "Account created, Please login" });
   } catch (err) {
     return res.status(500).json({ msg: err.message });
   }
