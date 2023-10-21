@@ -132,6 +132,7 @@ io.on("connection", async (socket) => {
 
 const allowedDomains = [
   "http://localhost:5173",
+  "http://localhost:5174",
   "https://sea-turtle-app-jr3nk.ondigitalocean.app",
   "http://www.creativevalley9.com",
   "https://creativevalley9.com",

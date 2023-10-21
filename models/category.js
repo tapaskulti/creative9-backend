@@ -12,6 +12,12 @@ const categorySchema = new Schema({
       type: String,
     },
   },
+  portfolios: [
+    {
+      type: Schema.Types.ObjectId,
+      ref:"portfolio"
+    }
+  ]
 });
 
 module.exports = model("category", categorySchema);

@@ -80,3 +80,19 @@ exports.getArtById = async (req, res) => {
 // todo: update art
 
 // todo: delete art
+exports.deleteArt = async(req,res) =>{
+  try {
+    const deletedArtItem = await Art.deleteOne({
+      _id: req.query.id
+    })
+
+    if(!deletedArtItem){
+      res.status(400).json({message:"No such item to be deleted"})
+    }
+
+    res.status(200).send(deletedArtItem)
+
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+}

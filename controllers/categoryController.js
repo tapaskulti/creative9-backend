@@ -1,4 +1,6 @@
+const category = require("../models/category");
 const Category = require("../models/category");
+const Portfolio = require("../models/Portfolio")
 const cloudinary = require("cloudinary");
 
 exports.createCategory = async (req, res) => {
@@ -82,3 +84,60 @@ exports.deleteCategory = async (req, res) => {
     res.status(500).send(error);
   }
 };
+
+exports.addPortfolioToCategory = async (req,res)=>{
+  try {
+
+    let portfolioImageFile;
+
+    if(req.files.portfolioImage){
+      portfolioImageFile = await cloudinary.v2.uploader.upload(
+        req.files.portfolioImage.tempFilePath,
+        {
+          folder: "portfolio"
+        }
+      )
+    }
+
+    const portfolioImage = portfolioImageFile && {
+      id: portfolioImageFile?.public_id,
+      secure_url: portfolioImageFile?.secure_url
+    }
+
+    req.body.picture = portfolioImage
+
+
+  const response = await Portfolio.create(req.body)
+  
+  res.status(200).send(response)
+
+    
+  } catch (error) {
+    res.status(500).send(error)
+  }
+}
+
+exports.getPortfolioByCategory = async (req,res)=>{
+  try { 
+    const response =  await Portfolio.find({
+      category: req.query.categoryId
+    })
+
+    res.status(200).send(response)
+
+  } catch (error) {
+    res.status(500).send(error)
+  }
+}
+
+exports.deletePortfolio = async(req,res)=>{
+  try {
+    const response = await Portfolio.deleteOne({
+      _id: req.query.portfolioId
+    })
+
+    res.status(200).send(response)
+  } catch (error) {
+    res.status(500).send(error)
+  }
+}

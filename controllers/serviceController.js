@@ -86,3 +86,22 @@ exports.getServiceById = async (req, res) => {
 };
 
 exports.updateService = async (req, res) => {};
+
+exports.deleteService = async (req,res) => {
+  try {
+    const deleteServiceItem = await Service.deleteOne({
+      _id: req.query.id
+    })
+
+    if(!deleteServiceItem){
+      res.status(400).json({
+        message: "no such illustration found"
+      })
+    }
+
+    res.status(200).send(deleteServiceItem)
+
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+}
