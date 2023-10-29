@@ -37,7 +37,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "https://creativevalley9.com",
+    origin: "https://www.creativevalley9.com",
     credentials: true,
     methods: ["GET", "POST"],
   },
@@ -134,7 +134,7 @@ const allowedDomains = [
   "http://localhost:5173",
   "http://localhost:5174",
   "https://sea-turtle-app-jr3nk.ondigitalocean.app",
-  "http://www.creativevalley9.com",
+  "https://www.creativevalley9.com",
   "https://creativevalley9.com",
 ];
 
