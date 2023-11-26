@@ -21,7 +21,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const YOUR_DOMAIN = 'http://localhost:5173';
+// const YOUR_DOMAIN = 'http://localhost:5173';
+const YOUR_DOMAIN = 'https://www.creativevalley9.com'
 
 const app = express();
 
