@@ -9,6 +9,9 @@ const cookieParser = require("cookie-parser");
 const User = require("./models/user");
 const Chat = require("./models/chat");
 
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
 const http = require("http");
 const { Server } = require("socket.io");
 
@@ -19,9 +22,12 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const YOUR_DOMAIN = 'http://localhost:5173';
+
 const app = express();
 
 // middlewares
+app.use(express.static("public"));
 app.use(express.json());
 app.use(morgan("tiny"));
 app.use(
@@ -173,6 +179,56 @@ app.use(apiVersion + "/category", require("./routes/category"));
 app.use(apiVersion + "/service", require("./routes/service"));
 app.use(apiVersion + "/chat", require("./routes/chat"));
 app.use(apiVersion + "/order", require("./routes/order"));
+
+app.post('/create-payment-intent', async (req, res) => {
+  const { artId, price, product_type,product_image } = req.body;
+
+  console.log(artId, price, "artId, price")
+  console.log(product_type,product_image, "product_type,product_image")
+
+  try {
+    // const { items } = req.body;
+
+    // Create a PaymentIntent with the order amount and currency
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'inr',
+           
+            unit_amount: price * 100,
+            product_data: {
+              name: product_type,
+              images: [product_image],
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${YOUR_DOMAIN}/success`,
+      cancel_url: `${YOUR_DOMAIN}/cancel`,
+
+
+
+      // amount: price * 100,
+      // currency: "inr",
+      // // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+      // automatic_payment_methods: {
+      //   enabled: true,
+      // },
+    });
+
+  
+    res.send({
+      checkoutUrl: session.url,
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('Error creating checkout session');
+  }
+});
 
 const PORT = process.env.PORT || 5001;
 
