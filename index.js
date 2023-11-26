@@ -9,7 +9,6 @@ const cookieParser = require("cookie-parser");
 const User = require("./models/user");
 const Chat = require("./models/chat");
 
-
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const http = require("http");
@@ -190,7 +189,7 @@ app.post('/create-payment-intent', async (req, res) => {
     // const { items } = req.body;
 
     // Create a PaymentIntent with the order amount and currency
-    const session = await stripe.checkout.sessions.create({
+    const session = await await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
@@ -220,6 +219,7 @@ app.post('/create-payment-intent', async (req, res) => {
       // },
     });
 
+    console.log(session, "paymentIntent")
   
     res.send({
       checkoutUrl: session.url,
