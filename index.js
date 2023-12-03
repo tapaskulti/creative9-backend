@@ -231,6 +231,42 @@ app.post('/create-payment-intent', async (req, res) => {
   }
 });
 
+app.post('/create-payment-intent-cart', async (req, res) => {
+  const { line_items } = req.body;
+
+
+  try {
+    // const { items } = req.body;
+
+    // Create a PaymentIntent with the order amount and currency
+    const session = await await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: line_items,
+      mode: 'payment',
+      success_url: `${YOUR_DOMAIN}/success`,
+      cancel_url: `${YOUR_DOMAIN}/cancel`,
+
+
+
+      // amount: price * 100,
+      // currency: "inr",
+      // // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+      // automatic_payment_methods: {
+      //   enabled: true,
+      // },
+    });
+
+    console.log(session, "paymentIntent")
+  
+    res.send({
+      checkoutUrl: session.url,
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('Error creating checkout session');
+  }
+});
+
 const PORT = process.env.PORT || 5001;
 
 server.listen(PORT, () => {

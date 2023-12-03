@@ -7,7 +7,7 @@ const OrderSchema = new Schema({
   },
   orderType: {
     type: String,
-    enum: ["Painting", "Illustration"],
+    enum: ["Art", "Illustration"],
   },
 
   art: Object,
@@ -15,12 +15,23 @@ const OrderSchema = new Schema({
   painting_shipping_details: {
     type: String,
   },
+  artPaid: {
+    type: Boolean,
+    default: false,
+  },
+  illustrationPaid: {
+    type: Boolean,
+    default: false,
+  },
   painting_delivery_status: {
     type: String,
     enum: ["DELIVERD", "NOT_DELIVERED"],
     default: "NOT_DELIVERED",
   },
   singlePaymentPrice: {
+    type: String,
+  },
+  qty: {
     type: String,
   },
   milestone: Object,
