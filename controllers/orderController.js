@@ -30,6 +30,46 @@ exports.deliverPaintingOrder = async (req, res) => {
   }
 };
 
+exports.paidArtOrder = async (req, res) => {
+  try {
+    const paidOrder = await Order.findOneAndUpdate(
+      {
+        _id: req.query.id,
+      },
+      {
+        artPaid: true,
+      },
+      {
+        new: true,
+      }
+    );
+
+    res.status(200).send(paidOrder);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+}
+
+exports.paidIllustrationOrder = async (req, res) => {
+  try {
+    const paidOrder = await Order.findOneAndUpdate(
+      {
+        _id: req.query.id,
+      },
+      {
+        illustrationPaid: true,
+      },
+      {
+        new: true,
+      }
+    );
+
+    res.status(200).send(paidOrder);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+}
+
 exports.updateIllustrationStatus = async (req, res) => {
   try {
     const updatedIllustration = await Order.findByIdAndUpdate(
@@ -51,7 +91,7 @@ exports.updateIllustrationStatus = async (req, res) => {
 exports.showAllOrderdPaintings = async (req, res) => {
   try {
     const allorderedPaintings = await Order.find({
-      orderType: "Painting",
+      orderType: "Art",
     }).populate("user");
 
     res.status(200).send(allorderedPaintings);
