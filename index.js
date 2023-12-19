@@ -43,8 +43,8 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "https://www.creativevalley9.com",
-    // origin: "http://localhost:5173",
+    // origin: "https://www.creativevalley9.com",
+    origin: YOUR_DOMAIN,
     credentials: true,
     methods: ["GET", "POST"],
   },

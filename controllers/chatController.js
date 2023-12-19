@@ -21,3 +21,21 @@ exports.getChats = async (req, res) => {
     console.log(error);
   }
 };
+
+exports.updateChat = async (req, res) => {
+  try {
+    const response = await Chat.findByIdAndUpdate(
+      req.query.id,
+      req.body,
+      { new: true }
+    )
+
+    console.log(response, "response chat .../");
+    res.status(200).json({
+      message: "Chats update successfully",
+      response,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}

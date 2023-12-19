@@ -23,6 +23,7 @@ const chatSchema = new Schema({
     },
   ],
   offer: Object,
+  
   createdAt: {
     type: Date,
     default: Date.now,
