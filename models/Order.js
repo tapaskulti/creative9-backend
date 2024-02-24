@@ -35,6 +35,9 @@ const OrderSchema = new Schema({
     type: String,
   },
   milestone: Object,
+  totalMileStonePrice:{
+    type: String,
+  },
   illustration_transaction_details: Object,
   illustration_status: {
     type: String,
