@@ -21,8 +21,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// const YOUR_DOMAIN = 'http://localhost:5174';
-const YOUR_DOMAIN = 'https://www.creativevalley9.com'
+const YOUR_DOMAIN = 'http://localhost:5173';
+// const YOUR_DOMAIN = 'https://www.creativevalley9.com'
 
 const app = express();
 
@@ -148,7 +148,6 @@ const allowedDomains = [
 app.use(
   cors({
     // origin: "http://24.199.70.115",
-    // origin: "https://drivado-frontend.web.app",
     // origin: "*",
 
     origin: function (origin, callback) {
@@ -195,7 +194,7 @@ app.post('/create-payment-intent', async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: 'inr',
+            currency: 'USD',
            
             unit_amount: price * 100,
             product_data: {
