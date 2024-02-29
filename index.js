@@ -194,7 +194,7 @@ app.post('/create-payment-intent', async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'inr',
            
             unit_amount: price * 100,
             product_data: {
