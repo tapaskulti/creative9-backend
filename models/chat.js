@@ -31,3 +31,4 @@ const chatSchema = new Schema({
 });
 
 module.exports = model("chat", chatSchema);
+
