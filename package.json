@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js",
     "start": "node index"
   },
   "keywords": [],
@@ -26,5 +26,8 @@
     "nodemailer": "^6.9.3",
     "socket.io": "^4.7.1",
     "stripe": "^14.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
   }
 }
