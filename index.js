@@ -8,7 +8,7 @@ const cloudinary = require("cloudinary");
 const cookieParser = require("cookie-parser");
 const User = require("./models/user");
 const Chat = require("./models/chat");
-
+const paypal = require('paypal-rest-sdk');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const http = require("http");
@@ -181,56 +181,56 @@ app.use(apiVersion + "/chat", require("./routes/chat"));
 app.use(apiVersion + "/order", require("./routes/order"));
 app.use(apiVersion + "/artReview", require("./routes/artReviews"));
 
-app.post('/create-payment-intent', async (req, res) => {
-  const { artId, price, product_type,product_image } = req.body;
+// app.post('/create-payment-intent', async (req, res) => {
+//   const { artId, price, product_type,product_image } = req.body;
 
-  console.log(artId, price, "artId, price")
-  console.log(product_type,product_image, "product_type,product_image")
+//   console.log(artId, price, "artId, price")
+//   console.log(product_type,product_image, "product_type,product_image")
 
-  try {
-    // const { items } = req.body;
+//   try {
+//     // const { items } = req.body;
 
-    // Create a PaymentIntent with the order amount and currency
-    const session = await await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'inr',
+//     // Create a PaymentIntent with the order amount and currency
+//     const session = await await stripe.checkout.sessions.create({
+//       payment_method_types: ['card'],
+//       line_items: [
+//         {
+//           price_data: {
+//             currency: 'inr',
            
-            unit_amount: price * 100,
-            product_data: {
-              name: product_type,
-              images: [product_image],
-            },
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `${YOUR_DOMAIN}/success`,
-      cancel_url: `${YOUR_DOMAIN}/cancel`,
+//             unit_amount: price * 100,
+//             product_data: {
+//               name: product_type,
+//               images: [product_image],
+//             },
+//           },
+//           quantity: 1,
+//         },
+//       ],
+//       mode: 'payment',
+//       success_url: `${YOUR_DOMAIN}/success`,
+//       cancel_url: `${YOUR_DOMAIN}/cancel`,
 
 
 
-      // amount: price * 100,
-      // currency: "inr",
-      // // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
-      // automatic_payment_methods: {
-      //   enabled: true,
-      // },
-    });
+//       // amount: price * 100,
+//       // currency: "inr",
+//       // // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+//       // automatic_payment_methods: {
+//       //   enabled: true,
+//       // },
+//     });
 
-    console.log(session, "paymentIntent")
+//     console.log(session, "paymentIntent")
   
-    res.send({
-      checkoutUrl: session.url,
-    });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Error creating checkout session');
-  }
-});
+//     res.send({
+//       checkoutUrl: session.url,
+//     });
+//   } catch (error) {
+//     console.error('Error:', error);
+//     res.status(500).send('Error creating checkout session');
+//   }
+// });
 
 app.post('/create-payment-intent-cart', async (req, res) => {
   const { line_items } = req.body;
@@ -267,6 +267,55 @@ app.post('/create-payment-intent-cart', async (req, res) => {
     res.status(500).send('Error creating checkout session');
   }
 });
+
+paypal.configure({
+  'mode': process.env.NODE_ENV === 'production' ? 'live' : 'sandbox', // Set to 'live' in production
+  'client_id': your_client_id,
+  'client_secret': your_client_secret
+});
+
+app.post('/create-payment-intent', async (req, res) => {
+  const { artId, price, product_type,product_image } = req.body;
+
+  console.log(artId, price, "artId, price")
+  console.log(product_type,product_image, "product_type,product_image")
+
+
+  const create_payment_json = {
+    "intent": "sale",
+    "payer": {
+        "payment_method": "paypal"
+    },
+    "redirect_urls": {
+        "return_url": `${YOUR_DOMAIN}/success`, // Replace with your success URL
+        "cancel_url": `${YOUR_DOMAIN}/cancel`, // Replace with your cancel URL
+    },
+    "transactions": [{
+        "item_list": {
+            "items": [{
+                "name": product_type, // Customize product/service name
+                "price": price,
+                "currency": "USD",
+                "quantity": 1
+            }]
+        },
+        "amount": {
+            "total": price,
+            "currency": "USD"
+        }
+    }]
+};
+
+  try {
+    const order = await paypal.payment.create(create_payment_json);
+    console.log(order)
+    return res.json({ orderID: order.id });
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('Error creating checkout session');
+  }
+});
+
 
 const PORT = process.env.PORT || 5001;
 
