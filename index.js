@@ -8,11 +8,14 @@ const cloudinary = require("cloudinary");
 const cookieParser = require("cookie-parser");
 const User = require("./models/user");
 const Chat = require("./models/chat");
-const paypal = require('paypal-rest-sdk');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const paypal = require("paypal-rest-sdk");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
+const base = "https://api-m.sandbox.paypal.com";
 
 const http = require("http");
 const { Server } = require("socket.io");
+const { default: axios } = require("axios");
 
 connectWithDb();
 cloudinary.config({
@@ -21,7 +24,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const YOUR_DOMAIN = 'http://localhost:5173';
+const YOUR_DOMAIN = "http://localhost:5173";
 // const YOUR_DOMAIN = 'https://www.creativevalley9.com'
 
 const app = express();
@@ -148,7 +151,7 @@ const allowedDomains = [
 app.use(
   cors({
     // origin: "http://24.199.70.115",
-  
+
     // origin: "*",
 
     origin: function (origin, callback) {
@@ -197,7 +200,7 @@ app.use(apiVersion + "/artReview", require("./routes/artReviews"));
 //         {
 //           price_data: {
 //             currency: 'inr',
-           
+
 //             unit_amount: price * 100,
 //             product_data: {
 //               name: product_type,
@@ -211,8 +214,6 @@ app.use(apiVersion + "/artReview", require("./routes/artReviews"));
 //       success_url: `${YOUR_DOMAIN}/success`,
 //       cancel_url: `${YOUR_DOMAIN}/cancel`,
 
-
-
 //       // amount: price * 100,
 //       // currency: "inr",
 //       // // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
@@ -222,7 +223,7 @@ app.use(apiVersion + "/artReview", require("./routes/artReviews"));
 //     });
 
 //     console.log(session, "paymentIntent")
-  
+
 //     res.send({
 //       checkoutUrl: session.url,
 //     });
@@ -232,22 +233,19 @@ app.use(apiVersion + "/artReview", require("./routes/artReviews"));
 //   }
 // });
 
-app.post('/create-payment-intent-cart', async (req, res) => {
+app.post("/create-payment-intent-cart", async (req, res) => {
   const { line_items } = req.body;
-
 
   try {
     // const { items } = req.body;
 
     // Create a PaymentIntent with the order amount and currency
     const session = await await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ["card"],
       line_items: line_items,
-      mode: 'payment',
+      mode: "payment",
       success_url: `${YOUR_DOMAIN}/success`,
       cancel_url: `${YOUR_DOMAIN}/cancel`,
-
-
 
       // amount: price * 100,
       // currency: "inr",
@@ -257,65 +255,132 @@ app.post('/create-payment-intent-cart', async (req, res) => {
       // },
     });
 
-    console.log(session, "paymentIntent")
-  
+    console.log(session, "paymentIntent");
+
     res.send({
       checkoutUrl: session.url,
     });
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Error creating checkout session');
+    console.error("Error:", error);
+    res.status(500).send("Error creating checkout session");
   }
 });
 
-paypal.configure({
-  'mode': process.env.NODE_ENV === 'production' ? 'live' : 'sandbox', // Set to 'live' in production
-  'client_id': your_client_id,
-  'client_secret': your_client_secret
-});
+const generateAccessToken = async () => {
+  try {
+    if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
+      throw new Error("MISSING_API_CREDENTIALS");
+    }
+    const auth = Buffer.from(
+      PAYPAL_CLIENT_ID + ":" + PAYPAL_CLIENT_SECRET
+    ).toString("base64");
+    const response = await fetch(`${base}/v1/oauth2/token`, {
+      method: "POST",
+      body: "grant_type=client_credentials",
+      headers: {
+        Authorization: `Basic ${auth}`,
+      },
+    });
 
-app.post('/create-payment-intent', async (req, res) => {
-  const { artId, price, product_type,product_image } = req.body;
-
-  console.log(artId, price, "artId, price")
-  console.log(product_type,product_image, "product_type,product_image")
-
-
-  const create_payment_json = {
-    "intent": "sale",
-    "payer": {
-        "payment_method": "paypal"
-    },
-    "redirect_urls": {
-        "return_url": `${YOUR_DOMAIN}/success`, // Replace with your success URL
-        "cancel_url": `${YOUR_DOMAIN}/cancel`, // Replace with your cancel URL
-    },
-    "transactions": [{
-        "item_list": {
-            "items": [{
-                "name": product_type, // Customize product/service name
-                "price": price,
-                "currency": "USD",
-                "quantity": 1
-            }]
-        },
-        "amount": {
-            "total": price,
-            "currency": "USD"
-        }
-    }]
+    const data = await response.json();
+    return data.access_token;
+  } catch (error) {
+    console.error("Failed to generate Access Token:", error);
+  }
 };
 
+app.post("/create-payment-intent", async (req, res) => {
+// app.post("/createPayment", async (req, res) => {
+  const { artId, price, product_type, product_image } = req.body;
+
+  console.log(artId, price, "artId, price");
+  console.log(product_type, product_image, "product_type,product_image");
+
+  const accessToken = await generateAccessToken();
+  const url = `${base}/v2/checkout/orders`;
+
+  const payload = {
+    intent: "CAPTURE",  
+    purchase_units: [
+      {
+        reference_id: artId,
+        amount: {
+          currency_code: "USD",
+          value: price,
+        },
+      },
+    ],
+    payment_source: {
+      paypal: {
+        experience_context: {
+          user_action: "PAY_NOW",         
+        },
+      },
+    },
+    application_context: {
+      return_url: `${YOUR_DOMAIN}/success`, // Replace with your success URL
+      cancel_url: `${YOUR_DOMAIN}/cancel`, // Replace with your cancel URL    
+    },
+  };
+
   try {
-    const order = await paypal.payment.create(create_payment_json);
-    console.log(order)
-    return res.json({ orderID: order.id });
+
+    const response = await axios.post(url,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+      )
+
+    const jsonResponse = await response.data.links.find(link=>link.rel === "payer-action").href
+    console.log("jsonResponse=======>", jsonResponse);
+    // return jsonResponse.links.find(link=>link.rel === "payer-action").href
+    return res.status(200).send({checkoutUrl: jsonResponse});
   } catch (error) {
-    console.error('Error:', error);
-    return res.status(500).send('Error creating checkout session');
+    console.error("Error:", error);
+    return res.status(500).send("Error creating checkout session");
   }
 });
 
+
+
+// capture order
+
+app.post("/captureOrder", async (req, res) => {
+  try {
+    const { orderID } = req.params;
+    const accessToken = await generateAccessToken();
+    const url = `${base}/v2/checkout/orders/${orderID}/capture`;
+
+    const response = await axios.post(url,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+      )
+      
+    // const response = await fetch(url, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `Bearer ${accessToken}`,
+    //   },
+    // });
+
+    const jsonResponse = await response.data
+
+    console.log("jsonResponse=======>", jsonResponse);
+  } catch (error) {
+    console.log("Failed to create order:", error);
+    return res.status(500).send({ success: false, error: error });
+  }
+});
 
 const PORT = process.env.PORT || 5001;
 
