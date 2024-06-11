@@ -290,20 +290,44 @@ const generateAccessToken = async () => {
 };
 
 app.post("/create-payment-intent", async (req, res) => {
-// app.post("/createPayment", async (req, res) => {
+  // app.post("/createPayment", async (req, res) => {
   const { artId, price, product_type, product_image } = req.body;
 
-  console.log(artId, price, "artId, price");
-  console.log(product_type, product_image, "product_type,product_image");
+  console.log(artId, price, "artId & price");
+  console.log(product_type, product_image, "product");
 
   const accessToken = await generateAccessToken();
   const url = `${base}/v2/checkout/orders`;
 
-  const payload = {
-    intent: "CAPTURE",  
+  const payload2 = {
+    intent: "CAPTURE",
     purchase_units: [
       {
-        reference_id: artId,
+        reference_id: "d9f80740-38f0-11e8-b467-0ed5f89f718b",
+        amount: { currency_code: "USD", value: "100.00" },
+      },
+    ],
+    payment_source: {
+      paypal: {
+        experience_context: {
+          payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
+          brand_name: "EXAMPLE INC",
+          locale: "en-US",
+          landing_page: "LOGIN",
+          shipping_preference: "SET_PROVIDED_ADDRESS",
+          user_action: "PAY_NOW",
+          return_url: "https://example.com/returnUrl",
+          cancel_url: "https://example.com/cancelUrl",
+        },
+      },
+    },
+  };
+
+  const payload = {
+    intent: "CAPTURE",
+    purchase_units: [
+      {
+        // reference_id: artId,
         amount: {
           currency_code: "USD",
           value: price,
@@ -313,69 +337,68 @@ app.post("/create-payment-intent", async (req, res) => {
     payment_source: {
       paypal: {
         experience_context: {
-          user_action: "PAY_NOW",         
+          user_action: "PAY_NOW",
         },
       },
     },
     application_context: {
       return_url: `${YOUR_DOMAIN}/success`, // Replace with your success URL
-      cancel_url: `${YOUR_DOMAIN}/cancel`, // Replace with your cancel URL    
+      cancel_url: `${YOUR_DOMAIN}/cancel`, // Replace with your cancel URL
     },
   };
 
   try {
+    const response = await axios.post(url, payload, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
-    const response = await axios.post(url,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-      )
-
-    const jsonResponse = await response.data.links.find(link=>link.rel === "payer-action").href
+    const jsonResponse = await response.data.links.find(
+      (link) => link.rel === "payer-action"
+    ).href;
     console.log("jsonResponse=======>", jsonResponse);
-    // return jsonResponse.links.find(link=>link.rel === "payer-action").href
-    return res.status(200).send({checkoutUrl: jsonResponse});
+    // return res.status(200).send({
+    //   checkoutUrl: jsonResponse
+    // });
+    return res.status(200).send({ data: response.data });
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).send("Error creating checkout session");
   }
 });
 
-
-
 // capture order
 
 app.post("/captureOrder", async (req, res) => {
   try {
-    const { orderID } = req.params;
+    const { orderID } = req.query;
     const accessToken = await generateAccessToken();
     const url = `${base}/v2/checkout/orders/${orderID}/capture`;
 
-    const response = await axios.post(url,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-      )
-      
-    // const response = await fetch(url, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Authorization: `Bearer ${accessToken}`,
-    //   },
-    // });
+    // const response = await axios.post(url,
+    //   // payload,
+    //   {
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       Authorization: `Bearer ${accessToken}`,
+    //     },
+    //   }
+    //   )
 
-    const jsonResponse = await response.data
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
+    // const jsonResponse = await response.data
+    const jsonResponse = await response.json();
     console.log("jsonResponse=======>", jsonResponse);
+    return res.send(jsonResponse);
   } catch (error) {
     console.log("Failed to create order:", error);
     return res.status(500).send({ success: false, error: error });
@@ -386,4 +409,108 @@ const PORT = process.env.PORT || 5001;
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+async function handleResponse(response) {
+  try {
+    const jsonResponse = await response.json();
+    return {
+      jsonResponse,
+      httpStatusCode: response.status,
+    };
+  } catch (err) {
+    const errorMessage = await response.text();
+    throw new Error(errorMessage);
+  }
+}
+
+const createOrder = async (price) => {
+  console.log("create Order called");
+  // use the cart information passed from the front-end to calculate the purchase unit details
+  console.log("price====>", price);
+  const accessToken = await generateAccessToken();
+  const url = `${base}/v2/checkout/orders`;
+
+  const payload = {
+    intent: "CAPTURE",
+    purchase_units: [
+      {
+        amount: {
+          currency_code: "USD",
+          value: parseInt(price),
+        },
+      },
+    ],
+    payment_source: {
+      paypal: {
+        experience_context: {
+          payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
+          brand_name: "CreativeValley.com",
+          user_action: "PAY_NOW",
+          shipping_preference: 'NO_SHIPPING',
+          return_url: `${YOUR_DOMAIN}/success`, // Replace with your success URL
+          cancel_url: `${YOUR_DOMAIN}/cancel`, // Replace with your cancel URL
+        },
+      },
+    },
+    // application_context: {
+    //   return_url: `${YOUR_DOMAIN}/success`, // Replace with your success URL
+    //   cancel_url: `${YOUR_DOMAIN}/cancel`, // Replace with your cancel URL
+    // },
+  };
+
+  const response = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
+};
+
+// createOrder route
+app.post("/api/orders", async (req, res) => {
+  try {
+    const { price } = req.body;
+    console.log("price1====>", price);
+    const { jsonResponse, httpStatusCode } = await createOrder(price);
+    res.status(httpStatusCode).json(jsonResponse);
+  } catch (error) {
+    console.error("Failed to create order:", error);
+    res.status(500).json({ error: "Failed to create order." });
+  }
+});
+
+const captureOrder = async (orderID) => {
+  const accessToken = await generateAccessToken();
+  const url = `${base}/v2/checkout/orders/${orderID}/capture`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return handleResponse(response);
+};
+
+// captureOrder route
+app.post("/api/orders/:orderID/capture", async (req, res) => {
+  try {
+    console.log("Capture Order called");
+    const { orderID } = req.params;
+    const { jsonResponse, httpStatusCode } = await captureOrder(orderID);
+    res.status(httpStatusCode).json(jsonResponse);
+  } catch (error) {
+    console.error("Failed to create order:", error);
+    res.status(500).json({ error: "Failed to capture order." });
+  }
+}); // serve index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.resolve("./checkout.html"));
 });
