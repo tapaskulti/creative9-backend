@@ -8,11 +8,14 @@ const cloudinary = require("cloudinary");
 const cookieParser = require("cookie-parser");
 const User = require("./models/user");
 const Chat = require("./models/chat");
-
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const paypal = require("paypal-rest-sdk");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
+const base = "https://api-m.sandbox.paypal.com";
 
 const http = require("http");
 const { Server } = require("socket.io");
+const { default: axios } = require("axios");
 
 connectWithDb();
 cloudinary.config({
@@ -21,7 +24,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const YOUR_DOMAIN = 'http://localhost:5173';
+const YOUR_DOMAIN = "http://localhost:5173";
 // const YOUR_DOMAIN = 'https://www.creativevalley9.com'
 
 const app = express();
@@ -148,7 +151,7 @@ const allowedDomains = [
 app.use(
   cors({
     // origin: "http://24.199.70.115",
-  
+
     // origin: "*",
 
     origin: function (origin, callback) {
@@ -179,74 +182,70 @@ app.use(apiVersion + "/category", require("./routes/category"));
 app.use(apiVersion + "/service", require("./routes/service"));
 app.use(apiVersion + "/chat", require("./routes/chat"));
 app.use(apiVersion + "/order", require("./routes/order"));
+app.use(apiVersion + "/artReview", require("./routes/artReviews"));
 
-app.post('/create-payment-intent', async (req, res) => {
-  const { artId, price, product_type,product_image } = req.body;
+// app.post('/create-payment-intent', async (req, res) => {
+//   const { artId, price, product_type,product_image } = req.body;
 
-  console.log(artId, price, "artId, price")
-  console.log(product_type,product_image, "product_type,product_image")
+//   console.log(artId, price, "artId, price")
+//   console.log(product_type,product_image, "product_type,product_image")
 
-  try {
-    // const { items } = req.body;
+//   try {
+//     // const { items } = req.body;
 
-    // Create a PaymentIntent with the order amount and currency
-    const session = await await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'inr',
-           
-            unit_amount: price * 100,
-            product_data: {
-              name: product_type,
-              images: [product_image],
-            },
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `${YOUR_DOMAIN}/success`,
-      cancel_url: `${YOUR_DOMAIN}/cancel`,
+//     // Create a PaymentIntent with the order amount and currency
+//     const session = await await stripe.checkout.sessions.create({
+//       payment_method_types: ['card'],
+//       line_items: [
+//         {
+//           price_data: {
+//             currency: 'inr',
 
+//             unit_amount: price * 100,
+//             product_data: {
+//               name: product_type,
+//               images: [product_image],
+//             },
+//           },
+//           quantity: 1,
+//         },
+//       ],
+//       mode: 'payment',
+//       success_url: `${YOUR_DOMAIN}/success`,
+//       cancel_url: `${YOUR_DOMAIN}/cancel`,
 
+//       // amount: price * 100,
+//       // currency: "inr",
+//       // // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+//       // automatic_payment_methods: {
+//       //   enabled: true,
+//       // },
+//     });
 
-      // amount: price * 100,
-      // currency: "inr",
-      // // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
-      // automatic_payment_methods: {
-      //   enabled: true,
-      // },
-    });
+//     console.log(session, "paymentIntent")
 
-    console.log(session, "paymentIntent")
-  
-    res.send({
-      checkoutUrl: session.url,
-    });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Error creating checkout session');
-  }
-});
+//     res.send({
+//       checkoutUrl: session.url,
+//     });
+//   } catch (error) {
+//     console.error('Error:', error);
+//     res.status(500).send('Error creating checkout session');
+//   }
+// });
 
-app.post('/create-payment-intent-cart', async (req, res) => {
+app.post("/create-payment-intent-cart", async (req, res) => {
   const { line_items } = req.body;
 
-
   try {
     // const { items } = req.body;
 
     // Create a PaymentIntent with the order amount and currency
     const session = await await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ["card"],
       line_items: line_items,
-      mode: 'payment',
+      mode: "payment",
       success_url: `${YOUR_DOMAIN}/success`,
       cancel_url: `${YOUR_DOMAIN}/cancel`,
-
-
 
       // amount: price * 100,
       // currency: "inr",
@@ -256,19 +255,147 @@ app.post('/create-payment-intent-cart', async (req, res) => {
       // },
     });
 
-    console.log(session, "paymentIntent")
-  
+    console.log(session, "paymentIntent");
+
     res.send({
       checkoutUrl: session.url,
     });
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Error creating checkout session');
+    console.error("Error:", error);
+    res.status(500).send("Error creating checkout session");
   }
 });
+
+const generateAccessToken = async () => {
+  try {
+    if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
+      throw new Error("MISSING_API_CREDENTIALS");
+    }
+    const auth = Buffer.from(
+      PAYPAL_CLIENT_ID + ":" + PAYPAL_CLIENT_SECRET
+    ).toString("base64");
+    const response = await fetch(`${base}/v1/oauth2/token`, {
+      method: "POST",
+      body: "grant_type=client_credentials",
+      headers: {
+        Authorization: `Basic ${auth}`,
+      },
+    });
+
+    const data = await response.json();
+    return data.access_token;
+  } catch (error) {
+    console.error("Failed to generate Access Token:", error);
+  }
+};
+
 
 const PORT = process.env.PORT || 5001;
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+async function handleResponse(response) {
+  try {
+    const jsonResponse = await response.json();
+    return {
+      jsonResponse,
+      httpStatusCode: response.status,
+    };
+  } catch (err) {
+    const errorMessage = await response.text();
+    throw new Error(errorMessage);
+  }
+}
+
+const createOrder = async (price) => {
+  console.log("create Order called");
+  // use the cart information passed from the front-end to calculate the purchase unit details
+  console.log("price====>", price);
+  const accessToken = await generateAccessToken();
+  const url = `${base}/v2/checkout/orders`;
+
+  const payload = {
+    intent: "CAPTURE",
+    purchase_units: [
+      {
+        amount: {
+          currency_code: "USD",
+          value: parseInt(price),
+        },
+      },
+    ],
+    payment_source: {
+      paypal: {
+        experience_context: {
+          payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
+          brand_name: "CreativeValley.com",
+          user_action: "PAY_NOW",
+          shipping_preference: 'NO_SHIPPING',
+          return_url: `${YOUR_DOMAIN}/success`, // Replace with your success URL
+          cancel_url: `${YOUR_DOMAIN}/cancel`, // Replace with your cancel URL
+        },
+      },
+    },
+    // application_context: {
+    //   return_url: `${YOUR_DOMAIN}/success`, // Replace with your success URL
+    //   cancel_url: `${YOUR_DOMAIN}/cancel`, // Replace with your cancel URL
+    // },
+  };
+
+  const response = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
+};
+
+// createOrder route
+app.post("/api/orders", async (req, res) => {
+  try {
+    const { price } = req.body;
+    console.log("price1====>", price);
+    const { jsonResponse, httpStatusCode } = await createOrder(price);
+    res.status(httpStatusCode).json(jsonResponse);
+  } catch (error) {
+    console.error("Failed to create order:", error);
+    res.status(500).json({ error: "Failed to create order." });
+  }
+});
+
+const captureOrder = async (orderID) => {
+  const accessToken = await generateAccessToken();
+  const url = `${base}/v2/checkout/orders/${orderID}/capture`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return handleResponse(response);
+};
+
+// captureOrder route
+app.post("/api/orders/:orderID/capture", async (req, res) => {
+  try {
+    console.log("Capture Order called");
+    const { orderID } = req.params;
+    const { jsonResponse, httpStatusCode } = await captureOrder(orderID);
+    res.status(httpStatusCode).json(jsonResponse);
+  } catch (error) {
+    console.error("Failed to create order:", error);
+    res.status(500).json({ error: "Failed to capture order." });
+  }
+}); // serve index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.resolve("./checkout.html"));
 });
