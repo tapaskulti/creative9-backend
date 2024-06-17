@@ -11,7 +11,7 @@ const Chat = require("./models/chat");
 const paypal = require("paypal-rest-sdk");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
-const base = "https://api-m.sandbox.paypal.com";
+const base = process.env.BASE_PAYPAL_URL
 
 const http = require("http");
 const { Server } = require("socket.io");
