@@ -24,8 +24,9 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const YOUR_DOMAIN = "http://localhost:5173";
+// const YOUR_DOMAIN = "http://localhost:5173";
 // const YOUR_DOMAIN = 'https://www.creativevalley9.com'
+const YOUR_DOMAIN = 'https://www.creativevalley9.in'
 
 const app = express();
 
@@ -146,6 +147,7 @@ const allowedDomains = [
   "https://sea-turtle-app-jr3nk.ondigitalocean.app",
   "https://www.creativevalley9.com",
   "https://creativevalley9.com",
+  "https://www.creativevalley9.in",
 ];
 
 app.use(
