@@ -8,8 +8,8 @@ const cloudinary = require("cloudinary");
 const cookieParser = require("cookie-parser");
 const User = require("./models/user");
 const Chat = require("./models/chat");
-const paypal = require("paypal-rest-sdk");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
 const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
 const base = process.env.BASE_PAYPAL_URL
 
@@ -24,8 +24,9 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const YOUR_DOMAIN = "http://localhost:5173";
+// const YOUR_DOMAIN = "http://localhost:5173";
 // const YOUR_DOMAIN = 'https://www.creativevalley9.com'
+const YOUR_DOMAIN = 'https://www.creativevalley9.in'
 
 const app = express();
 
@@ -146,6 +147,7 @@ const allowedDomains = [
   "https://sea-turtle-app-jr3nk.ondigitalocean.app",
   "https://www.creativevalley9.com",
   "https://creativevalley9.com",
+  "https://www.creativevalley9.in",
 ];
 
 app.use(
@@ -182,7 +184,8 @@ app.use(apiVersion + "/category", require("./routes/category"));
 app.use(apiVersion + "/service", require("./routes/service"));
 app.use(apiVersion + "/chat", require("./routes/chat"));
 app.use(apiVersion + "/order", require("./routes/order"));
-app.use(apiVersion + "/artReview", require("./routes/artReviews"));
+app.use(apiVersion + "/artReviews", require("./routes/artReviews"));
+// artReview
 
 // app.post('/create-payment-intent', async (req, res) => {
 //   const { artId, price, product_type,product_image } = req.body;

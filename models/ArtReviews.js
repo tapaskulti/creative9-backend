@@ -1,9 +1,13 @@
 const mongoose = require("mongoose");
 
 const ArtReviewSchema = mongoose.Schema({
-  art:{
+  artId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "art",
+    ref: "Art",
+  },
+  illustrationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Illustration",
   },
   username: {
     type: mongoose.Schema.Types.ObjectId,

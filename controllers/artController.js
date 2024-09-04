@@ -1,5 +1,7 @@
 const cloudinary = require("cloudinary");
 const Art = require("../models/art");
+const Order = require("../models/Order");
+const ArtReviews = require("../models/ArtReviews");
 
 exports.createArt = async (req, res) => {
   try {
@@ -80,19 +82,72 @@ exports.getArtById = async (req, res) => {
 // todo: update art
 
 // todo: delete art
-exports.deleteArt = async(req,res) =>{
+exports.deleteArt = async (req, res) => {
   try {
     const deletedArtItem = await Art.deleteOne({
-      _id: req.query.id
-    })
+      _id: req.query.id,
+    });
 
-    if(!deletedArtItem){
-      res.status(400).json({message:"No such item to be deleted"})
+    if (!deletedArtItem) {
+      res.status(400).json({ message: "No such item to be deleted" });
     }
 
-    res.status(200).send(deletedArtItem)
-
+    res.status(200).send(deletedArtItem);
   } catch (error) {
-    res.status(500).send(error.message)
+    res.status(500).send(error.message);
   }
-}
+};
+
+exports.createArtReview = async (req, res) => {
+  try {
+    console.log(req.query.orderId, "req.query.orderId");
+    console.log(req.body, "req.body");
+
+    const orderDetails = await Order.findById(req.query.orderId).populate(
+      "user"
+    );
+
+    if (!orderDetails) {
+      return res.status(400).json({ message: "No such order found" });
+    }
+
+    console.log(orderDetails, "orderDetails");
+
+    const payload = {
+      username: orderDetails?.user?._id,
+      artId: orderDetails?.art?.id,
+      reviewTitle: req.body.reviewTitle,
+    };
+
+    console.log(payload, "payload");
+
+    const newArtReview = await ArtReviews.create(payload);
+    await Order.findByIdAndUpdate(req.query.orderId, {
+      $set: {
+        reviewId: newArtReview._id,
+      },
+    });
+
+    res.status(200).send(newArtReview);
+  } catch (error) {
+    console.log(error, "error");
+    res.status(500).send(error);
+  }
+};
+
+// get reviews by art id
+exports.getArtReviewsByArtId = async (req, res) => {
+  try {
+    const getArtReviews = await ArtReviews.find({
+      artId: req.query.id,
+    })
+      .populate("username", "name")
+      .sort({ createdAt: -1 });
+
+    console.log(getArtReviews, "getArtReviews");
+
+    res.status(200).send(getArtReviews);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
