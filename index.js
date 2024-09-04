@@ -185,6 +185,7 @@ app.use(apiVersion + "/service", require("./routes/service"));
 app.use(apiVersion + "/chat", require("./routes/chat"));
 app.use(apiVersion + "/order", require("./routes/order"));
 app.use(apiVersion + "/artReviews", require("./routes/artReviews"));
+// artReview
 
 // app.post('/create-payment-intent', async (req, res) => {
 //   const { artId, price, product_type,product_image } = req.body;
