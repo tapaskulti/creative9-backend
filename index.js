@@ -184,7 +184,7 @@ app.use(apiVersion + "/category", require("./routes/category"));
 app.use(apiVersion + "/service", require("./routes/service"));
 app.use(apiVersion + "/chat", require("./routes/chat"));
 app.use(apiVersion + "/order", require("./routes/order"));
-app.use(apiVersion + "/artReviews", require("./routes/artReviews"));
+app.use(apiVersion + "/artReview", require("./routes/artReviews"));
 // artReview
 
 // app.post('/create-payment-intent', async (req, res) => {
