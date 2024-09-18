@@ -185,7 +185,7 @@ app.use(apiVersion + "/service", require("./routes/service"));
 app.use(apiVersion + "/chat", require("./routes/chat"));
 app.use(apiVersion + "/order", require("./routes/order"));
 app.use(apiVersion + "/artReview", require("./routes/artReviews"));
-// artReview 10.09.24
+// artReview 19.09.24
 
 // app.post('/create-payment-intent', async (req, res) => {
 //   const { artId, price, product_type,product_image } = req.body;
