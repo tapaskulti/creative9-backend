@@ -277,7 +277,7 @@ const generateAccessToken = async () => {
     const auth = Buffer.from(
       PAYPAL_CLIENT_ID + ":" + PAYPAL_CLIENT_SECRET
     ).toString("base64");
-    const response = await fetch(`${base}/v1/oauth2/token`, {
+    const response = await fetch(base + '/v1/oauth2/token', {
       method: "POST",
       body: "grant_type=client_credentials",
       headers: {
