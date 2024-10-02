@@ -175,6 +175,10 @@ app.use(
   })
 );
 
+app.use("/api",(req,res)=>{
+  res.send("Hello world");
+})
+
 const apiVersion = process.env.apiVersion || "/api/v1";
 
 // routers
