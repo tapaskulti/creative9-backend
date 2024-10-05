@@ -26,7 +26,7 @@ cloudinary.config({
 
 // const YOUR_DOMAIN = "http://localhost:5173";
 // const YOUR_DOMAIN = 'https://www.creativevalley9.com'
-const YOUR_DOMAIN = 'https://www.creativevalley9.in'
+const YOUR_DOMAIN = 'http://82.112.235.6'
 
 const app = express();
 
@@ -144,7 +144,7 @@ io.on("connection", async (socket) => {
 const allowedDomains = [
   "http://localhost:5173",
   "http://localhost:5174",
-  "http://82.112.235.6:4173",
+  "https://creativevalley9.in",
   "https://sea-turtle-app-jr3nk.ondigitalocean.app",
   "https://www.creativevalley9.com",
   "https://creativevalley9.com",
