@@ -24,8 +24,9 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const YOUR_DOMAIN = "http://localhost:5173";
+// const YOUR_DOMAIN = "http://localhost:5173";
 // const YOUR_DOMAIN = 'https://www.creativevalley9.com'
+const YOUR_DOMAIN = 'http://82.112.235.6'
 
 const app = express();
 
@@ -143,9 +144,11 @@ io.on("connection", async (socket) => {
 const allowedDomains = [
   "http://localhost:5173",
   "http://localhost:5174",
+  "https://creativevalley9.in",
   "https://sea-turtle-app-jr3nk.ondigitalocean.app",
   "https://www.creativevalley9.com",
   "https://creativevalley9.com",
+  "https://www.creativevalley9.in",
 ];
 
 app.use(
@@ -173,6 +176,8 @@ app.use(
   })
 );
 
+
+
 const apiVersion = process.env.apiVersion || "/api/v1";
 
 // routers
@@ -182,7 +187,12 @@ app.use(apiVersion + "/category", require("./routes/category"));
 app.use(apiVersion + "/service", require("./routes/service"));
 app.use(apiVersion + "/chat", require("./routes/chat"));
 app.use(apiVersion + "/order", require("./routes/order"));
-app.use(apiVersion + "/artReview", require("./routes/artReviews"));
+app.use(apiVersion + "/artReview", require("./routes/artReviews")); 
+
+app.use("/api",(req,res)=>{
+  res.send("Hello world");
+})
+// artReview 19.09.24
 
 // app.post('/create-payment-intent', async (req, res) => {
 //   const { artId, price, product_type,product_image } = req.body;
@@ -274,7 +284,7 @@ const generateAccessToken = async () => {
     const auth = Buffer.from(
       PAYPAL_CLIENT_ID + ":" + PAYPAL_CLIENT_SECRET
     ).toString("base64");
-    const response = await fetch(`${base}/v1/oauth2/token`, {
+    const response = await fetch(base + '/v1/oauth2/token', {
       method: "POST",
       body: "grant_type=client_credentials",
       headers: {
@@ -291,6 +301,12 @@ const generateAccessToken = async () => {
 
 
 const PORT = process.env.PORT || 5001;
+// 20-09-24
+
+// console.log(`Attempting to start server on port ${PORT}`);
+// server.listen(PORT, '0.0.0.0', () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
