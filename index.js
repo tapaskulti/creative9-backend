@@ -199,9 +199,7 @@ app.use(apiVersion + "/chat", require("./routes/chat"));
 app.use(apiVersion + "/order", require("./routes/order"));
 app.use(apiVersion + "/artReview", require("./routes/artReviews")); 
 
-app.use("/api",(req,res)=>{
-  res.send("Hello world");
-})
+
 // artReview 19.09.24
 
 // app.post('/create-payment-intent', async (req, res) => {
