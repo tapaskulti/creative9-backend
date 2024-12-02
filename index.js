@@ -25,8 +25,18 @@ cloudinary.config({
 });
 
 // const YOUR_DOMAIN = "http://localhost:5173";
-// const YOUR_DOMAIN = 'https://www.creativevalley9.com'
-const YOUR_DOMAIN = 'http://82.112.235.6'
+const YOUR_DOMAIN = 'https://creativevalley9.com'
+// const YOUR_DOMAIN = 'http://82.112.235.6'
+
+const allowedDomainsSocket = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://creativevalley9.in",
+  "https://sea-turtle-app-jr3nk.ondigitalocean.app",
+  "https://www.creativevalley9.com",
+  "https://creativevalley9.com",
+  "https://www.creativevalley9.in",
+]
 
 const app = express();
 
@@ -189,9 +199,7 @@ app.use(apiVersion + "/chat", require("./routes/chat"));
 app.use(apiVersion + "/order", require("./routes/order"));
 app.use(apiVersion + "/artReview", require("./routes/artReviews")); 
 
-app.use("/api",(req,res)=>{
-  res.send("Hello world");
-})
+
 // artReview 19.09.24
 
 // app.post('/create-payment-intent', async (req, res) => {
