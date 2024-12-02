@@ -60,7 +60,7 @@ exports.getAllServices = async (req, res) => {
     }).populate("categoryDetail");
 
     res.status(200).send(services);
-  } catch (error) {
+  } catch (err) {
     res.status(500).send(err);
   }
 };

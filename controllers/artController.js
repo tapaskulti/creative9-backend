@@ -2,6 +2,8 @@ const cloudinary = require("cloudinary");
 const Art = require("../models/art");
 const Order = require("../models/Order");
 const ArtReviews = require("../models/ArtReviews");
+const nodemailer = require("nodemailer");
+
 
 exports.createArt = async (req, res) => {
   try {
@@ -151,3 +153,42 @@ exports.getArtReviewsByArtId = async (req, res) => {
     res.status(500).send(error);
   }
 };
+
+const transporter = nodemailer.createTransport({
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+
+exports.contactUs = (req,res)=>{
+  const { name, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  try {
+    // Send email
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email, // or any desired recipient email
+      subject: "New Message Received",
+      text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Failed to send email" });
+      } else {
+        console.log("Email sent: " + info.response);
+        res.status(200).json({ message: "Details saved and email sent successfully" });
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
