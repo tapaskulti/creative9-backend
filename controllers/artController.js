@@ -173,10 +173,9 @@ exports.contactUs = (req,res)=>{
   }
 
   try {
-    // Send email
     const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email, // or any desired recipient email
+      from:email,
+      to: process.env.EMAIL_USER,
       subject: "New Message Received",
       text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
     };
