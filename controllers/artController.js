@@ -155,7 +155,7 @@ exports.getArtReviewsByArtId = async (req, res) => {
 };
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
+  host: process.env.EMAIL_HOST,
   port: 587,
   secure: false,
   auth: {
@@ -174,7 +174,7 @@ exports.contactUs = (req,res)=>{
 
   try {
     const mailOptions = {
-      from:email,
+      from:process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
       subject: "New Message Received",
       text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
