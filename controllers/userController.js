@@ -9,7 +9,7 @@ const path = require("path");
 
 exports.signup = async (req, res) => {
   try {
-    console.log(req.body);
+    // console.log(req.body);
     const { name, email, password } = req.body;
 
     if (!email || !name || !password) {
@@ -85,7 +85,7 @@ exports.activateEmail = async (req, res) => {
       process.env.ACTIVATION_TOKEN_SECRET
     );
 
-    console.log(user, "user");
+    // console.log(user, "user");
     const { name, email, password } = user;
 
     const check = await User.findOne({ email });
@@ -141,6 +141,7 @@ exports.login = async (req, res) => {
 
     res.json({ msg: "Login success" });
   } catch (error) {
+    // console.log("findOneAndUpdate", error)
     return res.status(500).json({ msg: error.message });
   }
 };
@@ -209,7 +210,7 @@ exports.getUserDetails = async (req, res) => {
 
     res.send(response);
   } catch (error) {
-    console.log(error);
+    // console.log(error);
   }
 };
 
@@ -278,7 +279,7 @@ exports.forgotPasswordmail = async (req, res, next) => {
 };
 
 exports.checkToken = async (req, res) => {
-  console.log(req.query.token, "token");
+  // console.log(req.query.token, "token");
   const user = await User.findOne({
     forgotPasswordToken: req.query.token,
     forgotPasswordExpiry: {
@@ -319,7 +320,7 @@ exports.resetPassword = async (req, res) => {
 
     const hashPassword = await bcrypt.hash(password, 10);
     //update password in database
-    console.log(req.user);
+    // console.log(req.user);
 
     await User.findOneAndUpdate(
       { email: user?.email },
@@ -345,7 +346,7 @@ exports.getAllUsers = async (req, res) => {
     "-password -refresh_token -refresh_token_expiry -forgotPasswordToken -forgotPasswordExpiry"
   );
 
-  console.log(users, "users list");
+  // console.log(users, "users list");
   res.send(users);
 };
 
