@@ -56,6 +56,7 @@ app.use(cookieParser(process.env.REFRESH_TOKEN_SECRET));
 const server = http.createServer(app);
 
 const io = new Server(server, {
+   path: "/api/socket.io", 
   cors: {
     // origin: "https://www.creativevalley9.com",
     origin: YOUR_DOMAIN,
@@ -87,7 +88,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("send-message", async (messages) => {
-    console.log(messages, "mm");
+    console.log(messages, "recieving message");
     try {
       const { sender, receiver, message, offer } = messages.msg;
       const payload = {};
