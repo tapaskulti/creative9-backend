@@ -26,7 +26,7 @@ cloudinary.config({
 
 // const YOUR_DOMAIN = "http://localhost:5173";
 const YOUR_DOMAIN = 'https://creativevalley9.com'
-// const YOUR_DOMAIN = 'http://82.112.235.6'
+
 
 const allowedDomainsSocket = [
   "http://localhost:5173",
