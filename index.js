@@ -96,13 +96,13 @@ io.on("connection", async (socket) => {
       if (messages?.msg?.images?.length > 0) {
         for (const image of messages?.msg?.images) {
           const result = await cloudinary.v2.uploader.upload(image, {
-            folder: "chat",
-            crop: "scale",
-          });
-          processedImages.push({
-            public_id: result?.public_id,
-            secure_url: result?.secure_url,
-          });
+  folder: "chat",
+  crop: "scale",
+});
+processedImages.push({
+  public_id: result?.public_id,
+  secure_url: result?.secure_url,
+});
         }
       }
       processedImages.map((image) => {

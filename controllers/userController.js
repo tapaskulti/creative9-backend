@@ -10,10 +10,10 @@ const path = require("path");
 exports.signup = async (req, res) => {
   try {
     // console.log(req.body);
-    const { name, email, password } = req.body;
+    const { name, email, phone_number, state, country, password } = req.body;
 
-    if (!email || !name || !password) {
-      return res.status(400).json({ msg: "Please fill in all fields." });
+    if (!email || !name || phone_number || !state || !country || !password) {
+      return res.status(400).json({ msg: "Please fill the all fields." });
     }
     if (!validateEmail(email))
       return res.status(400).json({ msg: "Invalid emails." });
@@ -65,7 +65,10 @@ exports.signup = async (req, res) => {
     // });
     const newUser = new User({
       name,
+      state,
+      country,
       email,
+      phone_number,
       password: passwordHash,
     });
 
@@ -86,7 +89,7 @@ exports.activateEmail = async (req, res) => {
     );
 
     // console.log(user, "user");
-    const { name, email, password } = user;
+    const { name, email, phone_number, state, country, password } = user;
 
     const check = await User.findOne({ email });
     if (check)
@@ -95,6 +98,9 @@ exports.activateEmail = async (req, res) => {
     const newUser = new User({
       name,
       email,
+      phone_number,
+      state,
+      country,
       password,
     });
 

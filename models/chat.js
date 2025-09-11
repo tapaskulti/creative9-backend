@@ -24,10 +24,11 @@ const chatSchema = new Schema({
   ],
   offer: Object,
   
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  // createdAt: {
+  //   type: Date,
+  //   default: Date.now,
+  }, {
+  timestamps: true
 });
 
 module.exports = model("chat", chatSchema);
