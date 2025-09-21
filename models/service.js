@@ -35,4 +35,12 @@ const serviceSchema = new mongoose.Schema({
   },
 });
 
+const userSchema = new mongoose.Schema({
+  email: String,
+  password: String,
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
+});
+
 module.exports = mongoose.model("service", serviceSchema);
+module.exports = mongoose.model('User', userSchema);
