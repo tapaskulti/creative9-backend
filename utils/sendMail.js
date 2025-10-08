@@ -28,7 +28,9 @@ const sendEmail = (to, messageBody, subject) => {
     service: "Gmail",
     auth: {
       type: "OAuth2",
-      user: SENDER_EMAIL_ADDRESS,
+      // user: SENDER_EMAIL_ADDRESS,
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
       clientId: MAILING_SERVICE_CLIENT_ID,
       clientSecret: MAILING_SERVICE_CLIENT_SECRET,
       refreshToken: MAILING_SERVICE_REFRESH_TOKEN,
@@ -37,7 +39,8 @@ const sendEmail = (to, messageBody, subject) => {
   });
 
   const mailOptions = {
-    from: SENDER_EMAIL_ADDRESS,
+    // from: SENDER_EMAIL_ADDRESS,
+    from: process.env.EMAIL_USER,
     to: to,
     subject: subject,
     html: messageBody,
