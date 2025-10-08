@@ -128,7 +128,7 @@ processedImages.push({
       };
 
       //   emit message to sender
-      io.to(socket?.id).emit("receive-message", messagePaylod);
+      // io.to(socket?.id).emit("receive-message", messagePaylod);
 
       // Emit the message to the receiver
       const receiverUser = await User.findById(receiver);
