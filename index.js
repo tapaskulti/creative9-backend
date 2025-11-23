@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
@@ -75,22 +76,40 @@ app.use((req, res, next) => {
 io.on("connection", async (socket) => {
   console.log("User connected");
 
+  // socket.on("user-connected", (userId) => {
+  //   console.log(userId, "id--->");
+  //   User.findByIdAndUpdate(userId, { socketId: socket.id }, { new: true })
+  //     .then((user) => {
+  //       console.log(`User connected: ${user.username}`);
+  //       } else {
+  //         console.log(`No user found in DB for ID: ${userId}`),
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error updating socket ID:", error);
+  //     });
+  // });
+
   socket.on("user-connected", (userId) => {
-    //   Store the MongoDB user ID in the socketId field
-    console.log(userId, "id--->");
-    User.findByIdAndUpdate(userId, { socketId: socket.id }, { new: true })
-      .then((user) => {
-        console.log("User connected:", user.username);
-      })
-      .catch((error) => {
-        console.error("Error updating socket ID:", error);
-      });
-  });
+  console.log(userId, "id--->");
+
+  User.findByIdAndUpdate(userId, { socketId: socket.id }, { new: true })
+    .then((user) => {
+      if (user) {
+        console.log(`User connected: ${user.username}`);
+      } else {
+        console.log(`No user found in DB for ID: ${userId}`);
+      }
+    })
+    .catch((error) => {
+      console.error("Error updating socket ID:", error);
+    });
+});
 
   socket.on("send-message", async (messages) => {
     console.log(messages, "recieving message");
     try {
-      const { sender, receiver, message, offer } = messages.msg;
+      const { sender, receiver, message, offer, createdAt } = messages.msg;
       const payload = {};
       let processedImages = [];
       if (messages?.msg?.images?.length > 0) {
@@ -115,6 +134,7 @@ processedImages.push({
         message,
         offer,
         images: processedImages,
+        createdAt: createdAt || new Date(),
       });
 
       await chat.save();
@@ -125,15 +145,23 @@ processedImages.push({
         message,
         offer,
         images: processedImages,
+        // createdAt: chat.createdAt,
       };
 
       //   emit message to sender
       // io.to(socket?.id).emit("receive-message", messagePaylod);
 
       // Emit the message to the receiver
-      const receiverUser = await User.findById(receiver);
-      if (receiverUser?.socketId) {
-        io.to(receiverUser.socketId).emit("receive-message", messagePaylod);
+      if (sender !== receiver) {
+  const receiverUser = await User.findById(receiver);
+  if (receiverUser?.socketId) {
+    io.to(receiverUser.socketId).emit("receive-message", messagePayload);
+  }
+}
+      // Send message back to the sender as well -added 16-10-25
+      const senderUser = await User.findById(sender);
+      if (senderUser?.socketId) {
+        io.to(senderUser.socketId).emit("receive-message", messagePaylod);
       }
     } catch (error) {
       console.log(error?.message);
