@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const SiteVisit = require("../models/SiteVisit");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
@@ -6,6 +7,31 @@ const handlebars = require("handlebars");
 const sendEmail = require("../utils/sendMail");
 const fs = require("fs");
 const path = require("path");
+
+exports.trackSiteVisit = async (req, res) => {
+  try {
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0] ||
+      req.socket.remoteAddress;
+
+    const userAgent = req.headers["user-agent"];
+
+    const exists = await SiteVisit.findOne({ ip_address: ip });
+
+    if (!exists) {
+      await SiteVisit.create({
+        ip_address: ip,
+        user_agent: userAgent,
+      });
+    }
+
+    const total = await SiteVisit.countDocuments();
+
+    return res.status(200).json({ total });
+  } catch (error) {
+    return res.status(500).json({ msg: error.message });
+  }
+};
 
 exports.signup = async (req, res) => {
   try {
@@ -258,9 +284,9 @@ exports.forgotPasswordmail = async (req, res, next) => {
     // )}/api/v1/password/reset/${forgotToken}`;
     let url;
     if (process.env.NODE_ENV === "production") {
-      // url = `https://drivado-frontend.web.app/password/reset/${forgotToken}`;
+      url = `https://drivado-frontend.web.app/password/reset/${forgotToken}`;
     } else {
-      url = `http://localhost:3000/password/reset/${forgotToken}`;
+      // url = `http://localhost:3000/password/reset/${forgotToken}`;
     }
 
     const message = `Copy paste this link in your url and hit enter \n\n ${url}`;

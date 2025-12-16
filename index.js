@@ -40,6 +40,7 @@ const allowedDomainsSocket = [
 ]
 
 const app = express();
+app.set("trust proxy", true);
 
 // middlewares
 app.use(express.static("public"));
