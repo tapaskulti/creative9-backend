@@ -10,26 +10,39 @@ const path = require("path");
 
 exports.trackSiteVisit = async (req, res) => {
   try {
-    const ip =
+    const rawIp =
       req.headers["x-forwarded-for"]?.split(",")[0] ||
       req.socket.remoteAddress;
 
-    const userAgent = req.headers["user-agent"];
+    const today = new Date().toISOString().split("T")[0];
 
-    const exists = await SiteVisit.findOne({ ip_address: ip });
+    // Daily-unique IP hash
+    const hashedIp = crypto
+      .createHash("md5")
+      .update(rawIp + today)
+      .digest("hex");
 
-    if (!exists) {
-      await SiteVisit.create({
-        ip_address: ip,
-        user_agent: userAgent,
-      });
-    }
+    await SiteVisit.updateOne(
+      { ip_address: hashedIp },
+      {
+        $setOnInsert: {
+          ip_address: hashedIp,
+          user_agent: req.headers["user-agent"],
+          visit_date: today,
+        },
+      },
+      { upsert: true }
+    );
 
-    const total = await SiteVisit.countDocuments();
+    // ✅ ALL-TIME TOTAL VISITS
+    const totalVisits = await SiteVisit.countDocuments();
 
-    return res.status(200).json({ total });
-  } catch (error) {
-    return res.status(500).json({ msg: error.message });
+    res.status(200).json({
+      success: true,
+      total: totalVisits, // <-- all-time total
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, msg: err.message });
   }
 };
 

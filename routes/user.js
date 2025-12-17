@@ -9,7 +9,7 @@ const {
   resetPassword,
   getUserDetails,
   getAllUsers,
-  trackSiteVisit,
+  trackSiteVisit
 } = require("../controllers/userController");
 
 const router = require("express").Router();
@@ -25,6 +25,6 @@ router.route("/logout").get(logout);
 router.route("/forgotPassword").post(forgotPasswordmail);
 router.route("/checkToken").get(checkToken);
 router.route("/restPassword").post(resetPassword);
-router.get("/track-visit", trackSiteVisit);
+router.post("/track-visit", trackSiteVisit);
 
 module.exports = router;
