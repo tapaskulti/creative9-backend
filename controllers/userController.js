@@ -259,67 +259,57 @@ exports.getUserDetails = async (req, res) => {
   }
 };
 
-exports.forgotPasswordmail = async (req, res, next) => {
+exports.forgotPasswordmail = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email });
 
+    const user = await User.findOne({ email });
     if (!user) {
-      return res.send({
+      return res.status(404).json({
         success: false,
         message: "User doesn't exist",
       });
     }
 
-    // const forgotToken = user.getForgotPasswordToken();
     const forgotToken = crypto.randomBytes(20).toString("hex");
-    const forgotPasswordExpiry = Date.now() + 20 * 60 * 1000;
-    await User.findOneAndUpdate(
-      {
-        email,
-      },
-      {
-        forgotPasswordToken: forgotToken,
-        forgotPasswordExpiry: forgotPasswordExpiry,
-      }
-    );
-
+    user.forgotPasswordToken = forgotToken;
+    user.forgotPasswordExpiry = Date.now() + 20 * 60 * 1000;
     await user.save({ validateBeforeSave: false });
-    const forgotPasswordMailTemplate = fs.readFileSync(
-      path.join(__dirname, "../template/forgotPassword.hbs"),
-      "utf8"
+
+    const resetUrl =
+      process.env.NODE_ENV === "production"
+        ? `https://creativevalley9.com/password/reset/${forgotToken}`
+        : `http://localhost:5173/password/reset/${forgotToken}`;
+
+    const templatePath = path.join(
+      __dirname,
+      "../template/forgotPassword.hbs"
     );
+    const source = fs.readFileSync(templatePath, "utf8");
+    const template = handlebars.compile(source);
 
-    const template = handlebars.compile(forgotPasswordMailTemplate);
-
-    // const myUrl = `${req.protocol}://${req.get(
-    //   "host"
-    // )}/api/v1/password/reset/${forgotToken}`;
-    let url;
-    if (process.env.NODE_ENV === "production") {
-      url = `https://drivado-frontend.web.app/password/reset/${forgotToken}`;
-    } else {
-      // url = `http://localhost:3000/password/reset/${forgotToken}`;
-    }
-
-    const message = `Copy paste this link in your url and hit enter \n\n ${url}`;
-
-    const messageBody = template({
-      url: url,
+    const htmlBody = template({
+      name: user.name || "User",
+      url: resetUrl,
     });
 
-    sendEmail(email, messageBody, "Forgot password Request");
+    await sendEmail(
+      email,
+      "Forgot Password Request",
+      htmlBody
+    );
 
     res.status(200).json({
       success: true,
-      message: "email sent succesfully",
+      message: "Password reset email sent successfully",
     });
-  } catch (error) {
-    user.forgotPasswordToken = undefined;
-    user.forgotPasswordExpiry = undefined;
-    await user.save({ validateBeforeSave: false });
 
-    res.status(500).send({ msg: error.message });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong. Please try again later.",
+    });
   }
 };
 
