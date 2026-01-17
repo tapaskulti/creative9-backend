@@ -279,7 +279,7 @@ exports.forgotPasswordmail = async (req, res) => {
     const resetUrl =
       process.env.NODE_ENV === "production"
         ? `https://creativevalley9.com/password/reset/${forgotToken}`
-        : `http://localhost:5173/password/reset/${forgotToken}`;
+        : ``;
 
     const templatePath = path.join(
       __dirname,
