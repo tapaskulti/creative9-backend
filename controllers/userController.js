@@ -8,52 +8,49 @@ const sendEmail = require("../utils/sendMail");
 const fs = require("fs");
 const path = require("path");
 
+
+
 exports.trackSiteVisit = async (req, res) => {
   try {
+
+    // 🔥 TEMPORARY – run ONCE to clean old indexes
+    await SiteVisit.collection.dropIndexes();
+
     const rawIp =
       req.headers["x-forwarded-for"]?.split(",")[0] ||
       req.socket.remoteAddress;
 
     const today = new Date().toISOString().split("T")[0];
 
-    // Daily-unique IP hash
-    const hashedIp = crypto
-      .createHash("md5")
-      .update(rawIp + today)
-      .digest("hex");
+    await SiteVisit.create({
+      ip_address: rawIp,
+      user_agent: req.headers["user-agent"],
+      visit_date: today,
+    });
 
-    await SiteVisit.updateOne(
-      { ip_address: hashedIp },
-      {
-        $setOnInsert: {
-          ip_address: hashedIp,
-          user_agent: req.headers["user-agent"],
-          visit_date: today,
-        },
-      },
-      { upsert: true }
-    );
-
-    // ✅ ALL-TIME TOTAL VISITS
     const totalVisits = await SiteVisit.countDocuments();
 
     res.status(200).json({
       success: true,
-      total: totalVisits, // <-- all-time total
+      total: totalVisits,
     });
+
   } catch (err) {
     res.status(500).json({ success: false, msg: err.message });
   }
 };
 
+
+
 exports.signup = async (req, res) => {
   try {
-    // console.log(req.body);
     const { name, email, phone_number, state, country, password } = req.body;
 
-    if (!email || !name || phone_number || !state || !country || !password) {
+    // Fixed the condition - added ! for phone_number
+    if (!email || !name || !phone_number || !state || !country || !password) {
       return res.status(400).json({ msg: "Please fill the all fields." });
     }
+    
     if (!validateEmail(email))
       return res.status(400).json({ msg: "Invalid emails." });
 
@@ -70,38 +67,6 @@ exports.signup = async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // const newUser = {
-    //   name,
-    //   email,
-    //   password: passwordHash,
-    // };
-
-    // cookieToken(user, req, res);
-
-    // const activation_token = createActivationToken(newUser);
-
-    // encript activation token
-    
-
-    // const url = `${CLIENT_URL}/user/activate/${activation_token}`;
-    // const url = `http://localhost:5173/user/activate/${activation_token}`;
-
-    // const signupUserMailTemplate = fs.readFileSync(
-    //   path.join(__dirname, "../template/signUp.hbs"),
-    //   "utf8"
-    // );
-
-    // const template = handlebars.compile(signupUserMailTemplate);
-
-    // const messageBody = template({
-    //   url,
-    // });
-
-    // sendEmail(email, messageBody, "Verify your email address");
-
-    // res.json({
-    //   msg: "Please check your mail activate your email to start.",
-    // });
     const newUser = new User({
       name,
       state,
@@ -259,6 +224,71 @@ exports.getUserDetails = async (req, res) => {
   }
 };
 
+exports.forgotPasswordmailxxxxxx = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.send({
+        success: false,
+        message: "User doesn't exist",
+      });
+    }
+
+    // const forgotToken = user.getForgotPasswordToken();
+    const forgotToken = crypto.randomBytes(20).toString("hex");
+    const forgotPasswordExpiry = Date.now() + 20 * 60 * 1000;
+    await User.findOneAndUpdate(
+      {
+        email,
+      },
+      {
+        forgotPasswordToken: forgotToken,
+        forgotPasswordExpiry: forgotPasswordExpiry,
+      }
+    );
+
+    await user.save({ validateBeforeSave: false });
+    const forgotPasswordMailTemplate = fs.readFileSync(
+      path.join(__dirname, "../template/forgotPassword.hbs"),
+      "utf8"
+    );
+
+    const template = handlebars.compile(forgotPasswordMailTemplate);
+
+    // const myUrl = `${req.protocol}://${req.get(
+    //   "host"
+    // )}/api/v1/password/reset/${forgotToken}`;
+    let url;
+    if (process.env.NODE_ENV === "production") {
+      // url = `https://drivado-frontend.web.app/password/reset/${forgotToken}`;
+    } else {
+      url = `http://localhost:3000/password/reset/${forgotToken}`;
+    }
+
+    const message = `Copy paste this link in your url and hit enter \n\n ${url}`;
+
+    const messageBody = template({
+      url: url,
+    });
+
+    sendEmail(email, messageBody, "Forgot password Request");
+
+    res.status(200).json({
+      success: true,
+      message: "email sent succesfully",
+    });
+  } catch (error) {
+    user.forgotPasswordToken = undefined;
+    user.forgotPasswordExpiry = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    res.status(500).send({ msg: error.message });
+  }
+};
+
+
 exports.forgotPasswordmail = async (req, res) => {
   try {
     const { email } = req.body;
@@ -277,9 +307,9 @@ exports.forgotPasswordmail = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     const resetUrl =
-      process.env.NODE_ENV === "production"
-        ? `https://creativevalley9.com/password/reset/${forgotToken}`
-        : `http://localhost:5173/password/reset/${forgotToken}`;
+  process.env.NODE_ENV === "production"
+    ? `https://creativevalley9.com/reset-password/${forgotToken}`
+    : `http://localhost:5173/reset-password/${forgotToken}`;
 
     const templatePath = path.join(
       __dirname,
@@ -313,13 +343,13 @@ exports.forgotPasswordmail = async (req, res) => {
   }
 };
 
+
+
 exports.checkToken = async (req, res) => {
   // console.log(req.query.token, "token");
-  const user = await User.findOne({
+ const user = await User.findOne({
     forgotPasswordToken: req.query.token,
-    forgotPasswordExpiry: {
-      $gt: Date.now(),
-    },
+    forgotPasswordExpiry: { $gt: Date.now() },
   });
 
   if (!user) {

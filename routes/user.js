@@ -24,7 +24,10 @@ router.route("/logout").get(logout);
 
 router.route("/forgotPassword").post(forgotPasswordmail);
 router.route("/checkToken").get(checkToken);
-router.route("/restPassword").post(resetPassword);
 router.post("/track-visit", trackSiteVisit);
+
+router.post("/forgot-password", forgotPasswordmail);
+router.get("/check-token", checkToken);
+router.post("/reset-password", resetPassword);
 
 module.exports = router;
