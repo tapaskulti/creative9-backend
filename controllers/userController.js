@@ -277,7 +277,7 @@ exports.forgotPasswordmailxxxxxx = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "email sent succesfully",
+      message: "Email sent succesfully!",
     });
   } catch (error) {
     user.forgotPasswordToken = undefined;
