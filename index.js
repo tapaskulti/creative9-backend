@@ -450,6 +450,9 @@ app.post("/api/orders/:orderID/capture", async (req, res) => {
     res.status(500).json({ error: "Failed to capture order." });
   }
 }); // serve index.html
+// app.get("/", (req, res) => {
+//   res.sendFile(path.resolve("./checkout.html"));
+// });
 app.get("/", (req, res) => {
-  res.sendFile(path.resolve("./checkout.html"));
+  res.status(200).json({ status: "Backend running" });
 });
