@@ -414,7 +414,7 @@ const createOrder = async (price) => {
 app.post("/api/orders", async (req, res) => {
   try {
     const { price } = req.body;
-    console.log("price1====>", price);
+    console.log("price ====>", price);
     const { jsonResponse, httpStatusCode } = await createOrder(price);
     res.status(httpStatusCode).json(jsonResponse);
   } catch (error) {
