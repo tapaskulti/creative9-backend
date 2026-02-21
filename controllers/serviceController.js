@@ -1,25 +1,30 @@
 const Service = require("../models/service");
-const cloudinary = require("cloudinary");
 
+const mongoose = require("mongoose");
+const cloudinary = require("cloudinary");
 exports.createService = async (req, res) => {
   try {
     let index = 0;
     const imagesList = {};
 
-    if (!req.files || Object.keys(req.files).length === 0) {
-      return res.status(400).json({ message: "No files were uploaded" });
+    // ---- VALIDATION ----
+    if (!req.body.title) {
+      return res.status(400).json({ message: "Title required" });
     }
 
-    const files = Array.isArray(req.files.images)
-      ? req.files.images
-      : [req.files.images];
+    if (!req.body.categoryDetail) {
+      return res.status(400).json({ message: "categoryDetail required" });
+    }
 
-    for (const file in files) {
-      try {
-        console.log(files[file]?.tempFilePath);
+    // ---- IMAGE UPLOAD ----
+    if (req.files && req.files.images) {
+      const files = Array.isArray(req.files.images)
+        ? req.files.images
+        : [req.files.images];
 
+      for (const file of files) {
         const result = await cloudinary.v2.uploader.upload(
-          files[file]?.tempFilePath,
+          file.tempFilePath,
           {
             folder: "servicecreativevally",
             crop: "scale",
@@ -27,41 +32,49 @@ exports.createService = async (req, res) => {
         );
 
         imagesList[index] = {
-          public_id: result?.public_id,
-          secure_url: result?.secure_url,
+          public_id: result.public_id,
+          secure_url: result.secure_url,
         };
 
         index++;
-      } catch (error) {
-        console.error("Error uploading image:", error);
       }
     }
 
-    console.log(JSON.parse(req.body.basicDetails), "req.body BASIC");
+    // ---- SAVE SERVICE ----
+   const newService = await Service.create({
+  ...req.body,
+  picture: imagesList,
+  categoryDetail: new mongoose.Types.ObjectId(req.body.categoryDetail),
+});
 
-    if (req.body.title === "") {
-      return res.status(400).json({ message: "Art should have title" });
-    }
-
-    req.body.picture = imagesList;
-    req.body.categoryDetail = req.query.categoryId;
-    const newArt = await Service.create(req.body);
-
-    res.status(200).send(newArt);
+    res.status(201).json(newService);
   } catch (err) {
-    res.status(500).send(err);
+    console.error(err);
+    res.status(500).json({ message: err.message });
   }
 };
 
 exports.getAllServices = async (req, res) => {
   try {
-    const services = await Service.find({
-      categoryDetail: req.query.categoryId,
-    }).populate("categoryDetail");
+    let services = [];
+
+    // If categoryId provided and valid → try filter
+    if (req.query.categoryId && mongoose.Types.ObjectId.isValid(req.query.categoryId)) {
+      services = await Service.find({
+        categoryDetail: new mongoose.Types.ObjectId(req.query.categoryId),
+      }).populate("categoryDetail");
+    }
+
+    // If no services found → return all services instead
+    if (!services.length) {
+      services = await Service.find().populate("categoryDetail");
+    }
 
     res.status(200).send(services);
+
   } catch (err) {
-    res.status(500).send(err);
+    console.error(err);
+    res.status(500).send(err.message);
   }
 };
 
